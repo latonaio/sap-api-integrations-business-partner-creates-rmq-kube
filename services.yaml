@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: sap-api-integrations-business-partner-creates-rmq-kube
+  name: sap-api-integrations-business-partner-creates-rmq-kube
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: sap-api-integrations-business-partner-creates-rmq-kube
+  template:
+    metadata:
+      labels:
+        run: sap-api-integrations-business-partner-creates-rmq-kube
+    spec:
+      nodeName: worker
+      hostname: sap-api-integrations-business-partner-creates-rmq-kube
+      containers:
+        - name: sap-api-integrations-business-partner-creates-rmq-kube
+          image: latonaio/sap-api-integrations-business-partner-creates-rmq-kube
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/aion/Data
+            - name: ui
+              mountPath: /var/lib/aion/UI/sap-api-integrations-business-partner-creates-rmq-kube/public/
+          env:
+            - name: "SAP_API_BASE_URL"
+              value: "http://XXX.XX.XX.XXX:8080/sap/opu/odata/sap/"
+            - name: "SAP_USER"
+              value: "XXXXXXXXXXXXXX"
+            - name: "SAP_PASS"
+              value: "XXXXXXXXXXXXXX"
+            - name: "SAP_TOKEN_REFRESH_URL"
+              value: "http://XXX.XX.XX.XXX:8080/sap/opu/odata/sap/API_PRODUCT_SRV"
+            - name: "SAP_RETRY_MAX_COUNT"
+              value: "1"
+            - name: "SAP_RETRY_INTERVAL"
+              value: "500"
+            - name: "RMQ_USER"
+              value: "XXXXXXXXXXXXXX"
+            - name: "RMQ_PASS"
+              value: "XXXXXXXXXXXXXX"
+            - name: "RMQ_ADDRESS"
+              value: "XX.XXX.XXX.XXX"
+            - name: "RMQ_PORT"
+              value: "32094"
+            - name: "RMQ_QUEUE_FROM"
+              value: "sap-api-integrations-business-partner-creates-queue-from"
+            - name: "RMQ_QUEUE_TO"
+              value: "sap-api-integrations-business-partner-creates-queue-to"
+            - name: "RMQ_VHOST"
+              value: "sap"
+          resources:
+            limits:
+              cpu: "1"
+              memory: "200Mi"
+            requests:
+              cpu: "0.5"
+              memory: "100Mi"
+      volumes:
+        - name: data
+          hostPath:
+            path: /var/lib/aion/default/Data
+        - name: ui
+          hostPath:
+            path: /var/lib/aion/UI/sap-api-integrations-business-partner-creates-rmq-kube/public/
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    run: sap-api-integrations-business-partner-creates-rmq-kube
+  name: sap-api-integrations-business-partner-creates-rmq-kube
+spec:
+  selector:
+    run: sap-api-integrations-business-partner-creates-rmq-kube
+  type: NodePort
+  ports:
+    - name: api
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+      nodePort: 30512
